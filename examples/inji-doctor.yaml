@@ -1,0 +1,31 @@
+# inji-doctor configuration file
+#
+# This file can be placed at:
+#   - ~/.inji-doctor.yaml
+#   - ./inji-doctor.yaml (in your working directory)
+#
+# Or specified via CLI: inji doctor --config path/to/config.yaml
+
+# Stack profile to use
+# Options: dev-stack, full-stack, certify-only, verify-only
+stack_profile: dev-stack
+
+# Base URL for HTTP health checks
+base_url: http://localhost
+
+# Timeout per check in seconds
+timeout_sec: 5
+
+# Directory containing Inji configuration files
+# When set, the tool reads .properties files from this directory to check
+# configuration alignment across components.
+# config_dir: /path/to/inji-config
+
+# Path to docker-compose.yml for container status checks
+# docker_compose_file: /path/to/docker-compose.yml
+
+# Output format: terminal, json, markdown
+# output: terminal
+
+# Enable verbose output (shows details and timing for each check)
+# verbose: false
