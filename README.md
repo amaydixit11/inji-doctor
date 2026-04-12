@@ -1,56 +1,56 @@
 # inji-doctor
 
-Diagnostic CLI tool for the **Inji Stack** — checks health, diagnoses issues, and suggests fixes.
+**Inji Doctor** is the ultimate diagnostic CLI for the MOSIP and Inji ecosystem. It streamlines development by executing automated health checks on services, configurations, and signing keys. Featuring a premium TrueColor terminal UI, it provides actionable fixes and dynamic health scores to maintain peak stack readiness.
 
 ## What It Does
 
 `inji doctor` runs a comprehensive set of diagnostic checks against your local Inji deployment:
 
-```
+```text
 $ inji doctor
 
-  ┌──────────────────────────────────────────────────────────┐
-  │              Inji Doctor — Stack Health Check            │
-  └──────────────────────────────────────────────────────────┘
+  ██╗███╗   ██╗██╗██╗      ███╗   ███╗ ██████╗ ███████╗██╗██████╗ 
+  ██║████╗  ██║██║██║      ████╗ ████║██╔═══██╗██╔════╝██║██╔══██╗
+  ██║██╔██╗ ██║██║██║      ██╔████╔██║██║   ██║███████╗██║██████╔╝
+  ██║██║╚██╗██║██║██║      ██║╚██╔╝██║██║   ██║╚════██║██║██╔═══╝ 
+  ██║██║ ╚████║██║██║ ██╗  ██║ ╚═╝ ██║╚██████╔╝███████║██║██║     
+  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝ ╚═╝  ╚═╝     ╚═╝ ╚═════╝ ╚══════╝╚═╝╚═╝     
+
+  INJI DEVELOPER TOOLKIT  v0.1.0
+  ──────────────────────────────────────────────────────────────────
 
   Stack: dev-stack
-  Time:  2026-04-11T10:30:00Z (2.3s)
+  Time:  2026-04-12 16:30:00 (2.3s)
+  Env:   macos | local-machine | 8 core(s)
 
   ── SERVICE ──
-  ✓ Certify is reachable
-  ✓ Mimoto (Wallet BFF) is reachable
-  ⚠ Inji Web is reachable
-     Inji Web redirected (HTTP 302) → /login
-  ✓ Inji Verify is reachable
-  ✓ eSignet (Mock) is reachable
-  ✓ PostgreSQL is running on localhost:5432
-  ✓ Redis is running on localhost:6379
+  ● Certify is reachable           ✓
+  ● Mimoto (Wallet BFF) is reachable ✓
+  ▲ Inji Web is reachable          ⚠
+      Inji Web redirected (HTTP 302) → /login
+      → Fix: Standard behavior. No action needed.
+  ● Inji Verify is reachable       ✓
+  ● eSignet (Mock) is reachable    ✓
+  ● PostgreSQL                     ✓
+  ○ Redis                          –
+      Redis is not reachable on localhost:6379
+      → Fix: Ensure Redis is running and listening on port 6379.
 
   ── CONFIG ──
-  ⚠ Configuration alignment across components
-     Found 1 configuration mismatch(es)
-     → Fix: Update 'mosip.oidc.redirect.uri' in mimoto-default.properties
-            to match one of: [http://localhost:8081/callback]
+  ● Configuration alignment         ✓
 
   ── KEYS ──
-  ✓ Certify signing keys are valid
-  ✓ Mimoto signing keys are valid
-  ✓ eSignet (Mock) signing keys are valid
+  ● Certify signing keys valid     ✓
+  ● Mimoto signing keys valid      ✓
 
-  ── TRUST ──
-  ✓ Verify trust registry is synced with Certify signing keys
+  ────────────────────────────────────────
+  Passed: 10  |  Warnings: 1  |  Failed: 1  |  Critical: 0  |  Skipped: 2
+  Health Index:  85%
+  💡 1 issue(s) have suggested fixes.
 
-  ── DOCKER ──
-  ✓ Docker container health
+  ⚠️  Warnings found — stack is functional but has issues
 
-  ── SYSTEM ──
-  ✓ System resources are sufficient
-
-  ── SUMMARY ──
-  Total: 14  |  Passed: 12  |  Warnings: 2  |  Failed: 0  |  Critical: 0  |  Skipped: 0
-  1 issue(s) have suggested fixes.
-
-  ✅ All checks passed — Inji stack is healthy
+  DOCTOR'S ADVICE: Looking good, but keep an eye on those warnings to ensure stability.
 ```
 
 ## Why It Exists

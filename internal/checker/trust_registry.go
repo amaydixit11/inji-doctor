@@ -21,10 +21,12 @@ func TrustRegistry() Checker {
 	return &trustRegistry{}
 }
 
-func (c *trustRegistry) ID() string       { return "trust-registry-sync" }
-func (c *trustRegistry) Name() string     { return "Verify trust registry is synced with Certify signing keys" }
+func (c *trustRegistry) ID() string { return "trust-registry-sync" }
+func (c *trustRegistry) Name() string {
+	return "Verify trust registry is synced with Certify signing keys"
+}
 func (c *trustRegistry) Category() model.CheckCategory { return model.CategoryTrust }
-func (c *trustRegistry) Component() string { return "inji-verify" }
+func (c *trustRegistry) Component() string             { return "inji-verify" }
 
 func (c *trustRegistry) Run(ctx context.Context, cfg config.Config) model.CheckResult {
 	verifyComp := model.FindComponent("inji-verify")

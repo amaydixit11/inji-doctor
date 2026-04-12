@@ -39,10 +39,10 @@ type SimpleChecker struct {
 	RunFn       func(ctx context.Context, cfg config.Config) model.CheckResult
 }
 
-func (s SimpleChecker) ID() string                         { return s.IDFn() }
-func (s SimpleChecker) Name() string                       { return s.NameFn() }
-func (s SimpleChecker) Category() model.CheckCategory      { return s.CategoryFn() }
-func (s SimpleChecker) Component() string                  { return s.ComponentFn() }
+func (s SimpleChecker) ID() string                    { return s.IDFn() }
+func (s SimpleChecker) Name() string                  { return s.NameFn() }
+func (s SimpleChecker) Category() model.CheckCategory { return s.CategoryFn() }
+func (s SimpleChecker) Component() string             { return s.ComponentFn() }
 func (s SimpleChecker) Run(ctx context.Context, cfg config.Config) model.CheckResult {
 	return s.RunFn(ctx, cfg)
 }
@@ -69,20 +69,20 @@ func (r Result) WithDetail(d string) Result {
 // Build creates a CheckResult from a Result builder.
 func (r Result) Build(id, name string, category model.CheckCategory, component string) model.CheckResult {
 	return model.CheckResult{
-		ID:           id,
-		Name:         name,
-		Category:     category,
-		Component:    component,
-		Severity:     r.Severity,
-		Message:      r.Message,
-		Detail:       r.Detail,
-		Expected:     r.Expected,
-		Actual:       r.Actual,
-		Fix:          r.Fix,
-		FixCommand:   r.FixCommand,
-		DocsURL:      r.DocsURL,
-		RawData:      r.RawData,
-		CheckedAt:    time.Now(),
+		ID:         id,
+		Name:       name,
+		Category:   category,
+		Component:  component,
+		Severity:   r.Severity,
+		Message:    r.Message,
+		Detail:     r.Detail,
+		Expected:   r.Expected,
+		Actual:     r.Actual,
+		Fix:        r.Fix,
+		FixCommand: r.FixCommand,
+		DocsURL:    r.DocsURL,
+		RawData:    r.RawData,
+		CheckedAt:  time.Now(),
 	}
 }
 

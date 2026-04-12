@@ -6,9 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"runtime"
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/inji/inji-doctor/internal/model"
 )
 
@@ -21,21 +24,27 @@ type Terminal struct {
 
 // NewTerminal creates a terminal reporter.
 func NewTerminal(w io.Writer, verbose, noColor bool) *Terminal {
+	if noColor {
+		color.NoColor = true
+	}
 	return &Terminal{w: w, verbose: verbose, noColor: noColor}
 }
 
 // Write renders the report to the terminal.
 func (t *Terminal) Write(report *model.CheckReport) error {
-	// Header.
-	fmt.Fprintf(t.w, "\n")
-	fmt.Fprintf(t.w, "  ┌──────────────────────────────────────────────────────────┐\n")
-	fmt.Fprintf(t.w, "  │              Inji Doctor — Stack Health Check            │\n")
-	fmt.Fprintf(t.w, "  └──────────────────────────────────────────────────────────┘\n")
-	fmt.Fprintf(t.w, "\n")
+	t.renderBanner()
 
 	// Stack profile and timing.
-	fmt.Fprintf(t.w, "  Stack: %s\n", report.StackProfile)
-	fmt.Fprintf(t.w, "  Time:  %s (%.1fs)\n", report.StartedAt.Format(time.RFC3339), report.Duration.Seconds())
+	cyan := color.New(color.FgCyan).SprintFunc()
+	white := color.New(color.FgWhite, color.Bold).SprintFunc()
+	fmt.Fprintf(t.w, "  %s  %s\n", cyan("Stack:"), white(report.StackProfile))
+	fmt.Fprintf(t.w, "  %s  %s (%s)\n", cyan("Time: "), report.StartedAt.Format("2006-01-02 15:04:05"), report.Duration.Round(time.Millisecond))
+
+	// Environment info.
+	hostname, _ := os.Hostname()
+	envStyle := color.New(color.FgHiBlack).SprintFunc()
+	fmt.Fprintf(t.w, "  %s  %s\n",
+		cyan("Env:  "), envStyle(fmt.Sprintf("%s | %s | %d core(s)", hostname, runtime.GOOS, runtime.NumCPU())))
 	fmt.Fprintf(t.w, "\n")
 
 	// Results grouped by category.
@@ -48,7 +57,81 @@ func (t *Terminal) Write(report *model.CheckReport) error {
 	// Summary.
 	t.renderSummary(report)
 
+	// Doctor's Advice.
+	t.renderAdvice(report)
+
 	return nil
+}
+
+func (t *Terminal) renderBanner() {
+	if t.noColor {
+		banner := `
+  Inji Doctor — Stack Health Check
+  ──────────────────────────────
+`
+		fmt.Fprint(t.w, banner)
+		return
+	}
+
+	logo := []string{
+		`  ██╗███╗   ██╗██╗██╗      ███╗   ███╗ ██████╗ ███████╗██╗██████╗ `,
+		`  ██║████╗  ██║██║██║      ████╗ ████║██╔═══██╗██╔════╝██║██╔══██╗`,
+		`  ██║██╔██╗ ██║██║██║      ██╔████╔██║██║   ██║███████╗██║██████╔╝`,
+		`  ██║██║╚██╗██║██║██║      ██║╚██╔╝██║██║   ██║╚════██║██║██╔═══╝ `,
+		`  ██║██║ ╚████║██║██║ ██╗  ██║ ╚═╝ ██║╚██████╔╝███████║██║██║     `,
+		`  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝ ╚═╝  ╚═╝     ╚═╝ ╚═════╝ ╚══════╝╚═╝╚═╝     `,
+	}
+
+	// MOSIP Gradient colors: Deep Blue -> Bright Blue -> Orange
+	deepBlue := RGB{R: 0, G: 70, B: 160}
+	brightBlue := RGB{R: 0, G: 160, B: 255}
+	orange := RGB{R: 255, G: 140, B: 0}
+
+	for _, line := range logo {
+		t.printGradient(line, deepBlue, brightBlue, orange)
+	}
+
+	versionStyle := color.New(color.FgHiBlack).SprintFunc()
+	titleStyle := color.New(color.FgHiBlue, color.Bold).SprintFunc()
+	boxStyle := color.New(color.FgHiBlack).SprintFunc()
+
+	fmt.Fprintf(t.w, "  %s  %s\n", titleStyle("INJI DEVELOPER TOOLKIT"), versionStyle("v0.1.0"))
+	fmt.Fprintf(t.w, "  %s\n\n", boxStyle("──────────────────────────────────────────────────────────────────"))
+}
+
+type RGB struct {
+	R, G, B int
+}
+
+func (t *Terminal) printGradient(text string, start, mid, end RGB) {
+	runes := []rune(text)
+	total := len(runes)
+	if total == 0 {
+		fmt.Fprintln(t.w)
+		return
+	}
+
+	for i, r := range runes {
+		var color RGB
+		ratio := float64(i) / float64(total)
+
+		if ratio < 0.5 {
+			// Interpolate between start and mid
+			localRatio := ratio * 2
+			color.R = int(float64(start.R) + localRatio*float64(mid.R-start.R))
+			color.G = int(float64(start.G) + localRatio*float64(mid.G-start.G))
+			color.B = int(float64(start.B) + localRatio*float64(mid.B-start.B))
+		} else {
+			// Interpolate between mid and end
+			localRatio := (ratio - 0.5) * 2
+			color.R = int(float64(mid.R) + localRatio*float64(end.R-mid.R))
+			color.G = int(float64(mid.G) + localRatio*float64(end.G-mid.G))
+			color.B = int(float64(mid.B) + localRatio*float64(end.B-mid.B))
+		}
+
+		fmt.Fprintf(t.w, "\x1b[38;2;%d;%d;%dm%c\x1b[0m", color.R, color.G, color.B, r)
+	}
+	fmt.Fprintln(t.w)
 }
 
 func (t *Terminal) renderCategory(results []model.CheckResult) {
@@ -57,99 +140,163 @@ func (t *Terminal) renderCategory(results []model.CheckResult) {
 	}
 
 	// Category header.
-	catName := results[0].Category
-	fmt.Fprintf(t.w, "  ── %s ──\n", strings.ToUpper(string(catName)))
+	catName := strings.ToUpper(string(results[0].Category))
+	catStyle := color.New(color.FgHiBlack, color.Bold).SprintFunc()
+	fmt.Fprintf(t.w, "  %s\n", catStyle(catName))
 
 	for _, r := range results {
 		status := r.Status()
 		name := r.Name
 
-		// Severity color via ANSI codes (simplified — no external dep).
-		var colorCode, reset string
-		if !t.noColor {
-			switch r.Severity {
-			case model.SeverityOK:
-				colorCode, reset = "\033[32m", "\033[0m" // green
-			case model.SeverityWarning:
-				colorCode, reset = "\033[33m", "\033[0m" // yellow
-			case model.SeverityError, model.SeverityCritical:
-				colorCode, reset = "\033[31m", "\033[0m" // red
-			case model.SeveritySkipped:
-				colorCode, reset = "\033[90m", "\033[0m" // gray
-			}
+		var icon string
+		var style *color.Color
+
+		switch r.Severity {
+		case model.SeverityOK:
+			icon = "●"
+			style = color.New(color.FgGreen)
+		case model.SeverityWarning:
+			icon = "▲"
+			style = color.New(color.FgYellow)
+		case model.SeverityError, model.SeverityCritical:
+			icon = "✖"
+			style = color.New(color.FgRed)
+		case model.SeveritySkipped:
+			icon = "○"
+			style = color.New(color.FgHiBlack)
 		}
 
-		fmt.Fprintf(t.w, "  %s%s %s%s\n", colorCode, status, name, reset)
+		if t.noColor {
+			fmt.Fprintf(t.w, "  %s %s\n", status, name)
+		} else {
+			fmt.Fprintf(t.w, "  %s %-30s %s\n", style.Sprint(icon), name, style.Sprint(status))
+		}
 
 		if !r.IsPassing() {
-			indent := "     "
-			fmt.Fprintf(t.w, "%s%s%s%s\n", indent, colorCode, r.Message, reset)
+			indent := "      "
+			msgStyle := color.New(color.FgHiWhite).SprintFunc()
+			if r.Severity == model.SeverityCritical || r.Severity == model.SeverityError {
+				msgStyle = color.New(color.FgRed).SprintFunc()
+			} else if r.Severity == model.SeverityWarning {
+				msgStyle = color.New(color.FgYellow).SprintFunc()
+			}
+
+			fmt.Fprintf(t.w, "%s%s\n", indent, msgStyle(r.Message))
 
 			if r.Fix != "" {
-				fmt.Fprintf(t.w, "%s→ Fix: %s\n", indent, r.Fix)
+				fixStyle := color.New(color.FgCyan).SprintFunc()
+				fmt.Fprintf(t.w, "%s%s %s\n", indent, fixStyle("→ Fix:"), r.Fix)
 			}
 
 			if r.FixCommand != "" {
-				fmt.Fprintf(t.w, "%s  $ %s\n", indent, r.FixCommand)
+				cmdStyle := color.New(color.FgHiBlack).SprintFunc()
+				fmt.Fprintf(t.w, "%s  %s\n", indent, cmdStyle("$ "+r.FixCommand))
 			}
 		}
 
 		if t.verbose && r.Detail != "" {
-			fmt.Fprintf(t.w, "     Detail: %s\n", r.Detail)
+			fmt.Fprintf(t.w, "      Detail: %s\n", r.Detail)
 		}
 		if t.verbose && r.Duration > 0 {
-			fmt.Fprintf(t.w, "     Took: %s\n", r.Duration.Round(time.Millisecond))
+			fmt.Fprintf(t.w, "      Took: %s\n", r.Duration.Round(time.Millisecond))
 		}
 	}
 
 	fmt.Fprintf(t.w, "\n")
 }
 
+func (t *Terminal) renderAdvice(report *model.CheckReport) {
+	if t.noColor {
+		return
+	}
+
+	score := report.HealthScore()
+	adviceStyle := color.New(color.FgHiCyan, color.Italic).SprintFunc()
+	headerStyle := color.New(color.FgHiYellow, color.Bold).SprintFunc()
+
+	var msg string
+	switch {
+	case score >= 90:
+		msg = "Your stack is in top shape! Ready for high-volume credential orchestration."
+	case score >= 70:
+		msg = "Looking good, but keep an eye on those warnings to ensure stability."
+	case score >= 40:
+		msg = "The stack is functional but brittle. Prioritize fixing the failed services."
+	default:
+		msg = "The stack needs immediate attention. Start by ensuring Docker is running."
+	}
+
+	fmt.Fprintf(t.w, "  %s %s\n", headerStyle("DOCTOR'S ADVICE:"), adviceStyle(msg))
+	fmt.Fprintf(t.w, "\n")
+}
+
 func (t *Terminal) renderSummary(report *model.CheckReport) {
 	s := report.Summary
 
-	fmt.Fprintf(t.w, "  ── SUMMARY ──\n")
-	fmt.Fprintf(t.w, "  Total: %d  |  Passed: %d  |  Warnings: %d  |  Failed: %d  |  Critical: %d  |  Skipped: %d\n",
-		s.Total, s.Passed, s.Warnings, s.Failed, s.Critical, s.Skipped)
+	lineStyle := color.New(color.FgHiBlack).SprintFunc()
+	fmt.Fprintf(t.w, "  %s\n", lineStyle("────────────────────────────────────────"))
+
+	// Grouped summary stats
+	success := color.New(color.FgGreen).SprintFunc()
+	warn := color.New(color.FgYellow).SprintFunc()
+	fail := color.New(color.FgRed).SprintFunc()
+	gray := color.New(color.FgHiBlack).SprintFunc()
+
+	fmt.Fprintf(t.w, "  %s %d  |  %s %d  |  %s %d  |  %s %d  |  %s %d\n",
+		success("Passed:"), s.Passed,
+		warn("Warnings:"), s.Warnings,
+		fail("Failed:"), s.Failed,
+		fail("Critical:"), s.Critical,
+		gray("Skipped:"), s.Skipped)
+
+	// Health Score
+	score := report.HealthScore()
+	var scoreColor *color.Color
+	switch {
+	case score >= 90:
+		scoreColor = color.New(color.FgGreen, color.Bold)
+	case score >= 70:
+		scoreColor = color.New(color.FgYellow, color.Bold)
+	default:
+		scoreColor = color.New(color.FgRed, color.Bold)
+	}
+	fmt.Fprintf(t.w, "  %s %s\n", lineStyle("Health Index:"), scoreColor.Sprintf(" %d%%", score))
 
 	if s.Fixable > 0 {
-		fmt.Fprintf(t.w, "  %d issue(s) have suggested fixes.\n", s.Fixable)
+		cyan := color.New(color.FgCyan).SprintFunc()
+		fmt.Fprintf(t.w, "  %s %d issue(s) have suggested fixes.\n", cyan("💡"), s.Fixable)
 	}
 
 	fmt.Fprintf(t.w, "\n")
 
 	// Overall status.
 	worst := report.WorstSeverity()
-	var overallMsg, colorCode, reset string
-	if !t.noColor {
-		reset = "\033[0m"
-	}
+	var icon, overallMsg string
+	var style *color.Color
+
 	switch worst {
 	case model.SeverityOK:
-		overallMsg = "✅ All checks passed — Inji stack is healthy"
-		if !t.noColor {
-			colorCode = "\033[32m"
-		}
+		icon = "✅"
+		overallMsg = "All checks passed — Inji stack is healthy"
+		style = color.New(color.FgGreen, color.Bold)
 	case model.SeverityWarning:
-		overallMsg = "⚠️  Warnings found — stack is functional but has issues"
-		if !t.noColor {
-			colorCode = "\033[33m"
-		}
+		icon = "⚠️ "
+		overallMsg = "Warnings found — stack is functional but has issues"
+		style = color.New(color.FgYellow, color.Bold)
 	case model.SeverityError:
-		overallMsg = "❌ Errors found — some components are not working correctly"
-		if !t.noColor {
-			colorCode = "\033[31m"
-		}
+		icon = "❌"
+		overallMsg = "Errors found — some components represent risks"
+		style = color.New(color.FgRed, color.Bold)
 	case model.SeverityCritical:
-		overallMsg = "🚨 Critical issues found — stack may be non-functional"
-		if !t.noColor {
-			colorCode = "\033[31m\033[1m"
-		}
+		icon = "🚨"
+		overallMsg = "Critical issues found — stack may be non-functional"
+		style = color.New(color.FgRed, color.Bold, color.Underline)
 	default:
 		overallMsg = "Checks completed"
+		style = color.New(color.FgWhite)
 	}
 
-	fmt.Fprintf(t.w, "  %s%s%s\n", colorCode, overallMsg, reset)
+	fmt.Fprintf(t.w, "  %s  %s\n", icon, style.Sprint(overallMsg))
 	fmt.Fprintf(t.w, "\n")
 }
 

@@ -23,10 +23,10 @@ func SystemResources() Checker {
 	return &systemResources{}
 }
 
-func (c *systemResources) ID() string       { return "system-resources" }
-func (c *systemResources) Name() string     { return "System resources are sufficient" }
+func (c *systemResources) ID() string                    { return "system-resources" }
+func (c *systemResources) Name() string                  { return "System resources are sufficient" }
 func (c *systemResources) Category() model.CheckCategory { return model.CategorySystem }
-func (c *systemResources) Component() string { return "" }
+func (c *systemResources) Component() string             { return "" }
 
 // Minimum requirements for running the full Inji dev stack.
 const (
