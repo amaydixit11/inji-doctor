@@ -5,9 +5,9 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"strings"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/inji/inji-doctor/internal/config"
@@ -220,7 +220,6 @@ func (c *keyValidity) readProperties(cfg config.Config, filename string) map[str
 
 	return props
 }
-
 
 func splitLines(s string) []string {
 	lines := make([]string, 0)

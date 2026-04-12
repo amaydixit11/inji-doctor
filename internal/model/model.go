@@ -143,13 +143,13 @@ type CheckReport struct {
 
 // Summary provides aggregate statistics across all checks.
 type Summary struct {
-	Total       int `json:"total"`
-	Passed      int `json:"passed"`
-	Failed      int `json:"failed"`
-	Warnings    int `json:"warnings"`
-	Critical    int `json:"critical"`
-	Skipped     int `json:"skipped"`
-	Fixable     int `json:"fixable"` // count of issues that have a suggested fix
+	Total    int `json:"total"`
+	Passed   int `json:"passed"`
+	Failed   int `json:"failed"`
+	Warnings int `json:"warnings"`
+	Critical int `json:"critical"`
+	Skipped  int `json:"skipped"`
+	Fixable  int `json:"fixable"` // count of issues that have a suggested fix
 }
 
 // Compute derives the Summary from Results.
@@ -180,6 +180,27 @@ func (r *CheckReport) Compute() {
 		}
 	}
 	r.Summary = s
+}
+
+// HealthScore calculates a health percentage (0-100) based on check results.
+func (r *CheckReport) HealthScore() int {
+	activeChecks := r.Summary.Total - r.Summary.Skipped
+	if activeChecks <= 0 {
+		return 0
+	}
+
+	// Calculate weighted score
+	// Passed = 1.0, Warning = 0.5, Failed/Critical = 0
+	points := float64(r.Summary.Passed)*1.0 + float64(r.Summary.Warnings)*0.5
+	score := (points / float64(activeChecks)) * 100
+
+	if score < 0 {
+		return 0
+	}
+	if score > 100 {
+		return 100
+	}
+	return int(score)
 }
 
 // WorstSeverity returns the highest severity found across all results.

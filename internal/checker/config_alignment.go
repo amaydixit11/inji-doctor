@@ -26,10 +26,10 @@ func ConfigAlignment() Checker {
 	return &configAlignment{}
 }
 
-func (c *configAlignment) ID() string       { return "config-alignment" }
-func (c *configAlignment) Name() string     { return "Configuration alignment across components" }
+func (c *configAlignment) ID() string                    { return "config-alignment" }
+func (c *configAlignment) Name() string                  { return "Configuration alignment across components" }
 func (c *configAlignment) Category() model.CheckCategory { return model.CategoryConfig }
-func (c *configAlignment) Component() string { return "" } // Cross-component check
+func (c *configAlignment) Component() string             { return "" } // Cross-component check
 
 func (c *configAlignment) Run(ctx context.Context, cfg config.Config) model.CheckResult {
 	if cfg.ConfigDir == "" {
@@ -69,14 +69,14 @@ func (c *configAlignment) Run(ctx context.Context, cfg config.Config) model.Chec
 
 // configIssue represents a single configuration mismatch.
 type configIssue struct {
-	Key         string `json:"key"`
-	Expected    string `json:"expected"`
-	Actual      string `json:"actual"`
-	SourceFile  string `json:"source_file"`
-	TargetFile  string `json:"target_file"`
-	Message     string `json:"message"`
-	Fix         string `json:"fix"`
-	IsCritical  bool   `json:"is_critical"`
+	Key        string `json:"key"`
+	Expected   string `json:"expected"`
+	Actual     string `json:"actual"`
+	SourceFile string `json:"source_file"`
+	TargetFile string `json:"target_file"`
+	Message    string `json:"message"`
+	Fix        string `json:"fix"`
+	IsCritical bool   `json:"is_critical"`
 }
 
 func (c *configAlignment) checkAlignment(cfg config.Config) []configIssue {

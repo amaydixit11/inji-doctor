@@ -2,7 +2,7 @@ package checker
 
 import (
 	"context"
-	
+
 	"fmt"
 	"os"
 	"os/exec"
@@ -24,10 +24,10 @@ func DockerStatus() Checker {
 	return &dockerStatus{}
 }
 
-func (c *dockerStatus) ID() string       { return "docker-status" }
-func (c *dockerStatus) Name() string     { return "Docker container health" }
+func (c *dockerStatus) ID() string                    { return "docker-status" }
+func (c *dockerStatus) Name() string                  { return "Docker container health" }
 func (c *dockerStatus) Category() model.CheckCategory { return model.CategoryDocker }
-func (c *dockerStatus) Component() string { return "" }
+func (c *dockerStatus) Component() string             { return "" }
 
 func (c *dockerStatus) Run(ctx context.Context, cfg config.Config) model.CheckResult {
 	// Determine the docker-compose file to use.
