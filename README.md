@@ -1,6 +1,6 @@
 # inji-doctor
 
-**Inji Doctor** is the ultimate diagnostic CLI for the MOSIP and Inji ecosystem. It streamlines development by executing automated health checks on services, configurations, and signing keys. Featuring a premium TrueColor terminal UI, it provides actionable fixes and dynamic health scores to maintain peak stack readiness.
+**Inji Doctor** is the diagnostic CLI for the MOSIP and Inji ecosystem. It streamlines development by executing automated health checks on services, configurations, and signing keys. Featuring a premium TrueColor terminal UI, it provides actionable fixes and dynamic health scores to maintain peak stack readiness.
 
 ## What It Does
 
